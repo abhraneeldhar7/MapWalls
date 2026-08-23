@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDebouncedAsync } from "@/hooks/useDebouncedAsync";
 import { searchPlaces, type PlaceResult } from "@/lib/api/services/geocode";
+import { Spinner } from "../ui/spinner";
 
 const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 450;
@@ -22,7 +23,7 @@ type SearchBarProps = {
 
 export function SearchBar({ onSelectPlace }: SearchBarProps) {
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [openResults, setOpenResults] = useState(false);
   const [locating, setLocating] = useState(false);
 
   const { status, data } = useDebouncedAsync(
@@ -33,17 +34,17 @@ export function SearchBar({ onSelectPlace }: SearchBarProps) {
   );
 
   useEffect(() => {
-    if (status === "success" && data && data.length > 0) setOpen(true);
-    else if (status !== "loading") setOpen(false);
+    if (status === "success" && data && data.length > 0) setOpenResults(true);
+    else if (status !== "loading") setOpenResults(false);
   }, [status, data]);
 
   function handleOpenChange(next: boolean) {
-    if (!next) setOpen(false);
+    if (!next) setOpenResults(false);
     // opening is code-driven only; ignore the trigger's click-to-open attempts
   }
 
   function select(place: PlaceResult) {
-    setOpen(false);
+    setOpenResults(false);
     onSelectPlace(place);
   }
 
@@ -69,10 +70,10 @@ export function SearchBar({ onSelectPlace }: SearchBarProps) {
   const [searchbarOpen, setSearchbarOpen] = useState(false);
 
   return (
-    <div className="fixed top-4 left-[50%] translate-x-[-50%] z-5 w-fit h-fit">
-      <div className={`rounded-sm bg-input border transition-all flex items-center ${searchbarOpen ? "gap-1.5" : "gap-0"}`} >
+    <div className="fixed top-4 left-[50%] translate-x-[-50%] z-5 w-fit h-fit flex flex-col gap-1.5">
+      <div className={` transition-all ${searchbarOpen ? "gap-1.5 bg-background flex items-center rounded-[10px] p-[2px]" : "gap-0 rounded-0"} p-0`} >
         <Button
-          className={`transition-all w-fit overflow-hidden hover:scale-[0.97] active:scale-[0.95]  ${!searchbarOpen ? "max-w-100 p-3 oapcity-100" : "max-w-0 opacity-0 p-0"} `}
+          className={`transition-all w-fit overflow-hidden duration-fast hover:scale-[0.97] active:scale-[0.95]  ${!searchbarOpen ? "max-w-100 p-3 oapcity-100" : "max-w-0 opacity-0 p-0"} bg-background`}
           onClick={() => { setSearchbarOpen(true) }}
           aria-label="Search places"
           size="icon"
@@ -80,62 +81,47 @@ export function SearchBar({ onSelectPlace }: SearchBarProps) {
           <SearchIcon />
         </Button>
 
-        <div className={`overflow-hidden w-fit ${searchbarOpen ? "max-w-100 p-3" : "max-w-0 p-0"} transition-all`}>
+        <div className={`overflow-hidden w-fit ${searchbarOpen ? "max-w-100 px-2" : "max-w-0 px-0"} transition-all relative`}>
           <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="Search places..."
-            className="w-full md:w-50 px-2 text-md sm:text-base border-0 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 bg-transparent "
+            className="w-full md:w-50 text-md sm:text-base border-0 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 bg-transparent"
           />
         </div>
 
-        <div className={`w-fit transition-all ${searchbarOpen ? "max-w-100 p-4 oapcity-100" : "max-w-0 opacity-0 p-0"} overflow-hidden hover:scale-[0.97] rounded-sm hover:bg-muted-foreground/20 active:scale-[0.95] cursor-pointer select-none`}>
-        </div>
-        <Button
-          className={`transition-all w-fit overflow-hidden hover:scale-[0.97] active:scale-[0.95]  ${searchbarOpen ? "max-w-100 p-3 oapcity-100" : "max-w-0 opacity-0 p-0"} `}
-          onClick={locate}
-          aria-label="Use my location"
-          disabled={locating}
-          size="icon"
-          variant="ghost">
-          <MapPinIcon size={16} />
-        </Button>
-
+        {status === "loading" ?
+          <Button
+            size="icon"
+            variant="ghost"
+            className="bg-transparent!">
+            <Spinner />
+          </Button> :
+          <Button
+            className={`transition-all w-fit overflow-hidden hover:scale-[0.97] active:scale-[0.95]  ${searchbarOpen ? "max-w-100 oapcity-100" : "max-w-0 opacity-0"} `}
+            onClick={locate}
+            aria-label="Use my location"
+            disabled={locating}
+            size="icon"
+            variant="ghost">
+            <MapPinIcon />
+          </Button>
+        }
       </div>
 
-      {/* <div className="relative flex-1">
-        <SearchIcon className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !open && results.length > 0) select(results[0]);
-          }}
-          placeholder="Search a place…"
-          className="bg-input pl-10"
-        />
-        {status === "loading" && (
-          <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-        )}
+      <div className="relative w-full">
+        {openResults &&
+          <div className="absolute top-0 h-fit w-full bg-muted p-1 rounded-[10px]">
+            {results.map((place) => (
+              <Button size="sm" variant="ghost" className="w-full" onClick={() => select(place)}>
+                <span className="truncate">
+                  {place.label}
+                </span>
+              </Button>
+            ))}
+          </div>
+        }
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={locate}
-        aria-label="Use my location"
-        disabled={locating}
-      >
-        {locating ? <Loader2 className="animate-spin" /> : <LocateFixed />}
-      </Button> */}
-
-      <DropdownMenu open={open} onOpenChange={handleOpenChange}>
-        <DropdownMenuContent>
-          {results.map((place) => (
-            <DropdownMenuItem key={place.id} onClick={() => select(place)}>
-              <MapPin />
-              <span className="truncate">{place.label}</span>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
     </div>
   );
 }

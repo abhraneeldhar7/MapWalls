@@ -6,3 +6,4 @@
 - Don't future proof stuff if not asked to.
 - Don't messup my beautiful comments, and dont add comments if not asked to.
 - I make often make heavy changes between prompts, don't overwrite those.
+- Dont npm build or lint if not asked to.

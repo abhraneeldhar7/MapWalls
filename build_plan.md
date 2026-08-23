@@ -2,7 +2,7 @@ Making a maps wallpaper app in nextjs. For now make this in "/" route itself and
 
 # Build plan
 
-## Objective: Target the fundamentals of map, how map works, make a proper logical clean interface (code interafce I don't mean UI) which gives me full fidelity to make UI elements on top later which will then communicate with the map layer smoothly and cleanly, no cello tape bullshit, no slop. This will have physical UI elements, will discuss that later, and ai agent support so I can integrate groq or other ai providers and make an AI agent which users can interract with to modify the style of the map.
+## Objective: Target the fundamentals of map, how map works, make a proper logical clean interface (code interafce I don't mean UI) which gives me full fidelity to make UI elements on top later which will then communicate with the map layer smoothly and cleanly, no cello tape bullshit, no slop. This will have physical UI elements, will discuss that later, and ai agent support so I can integrate groq or other ai providers and make an AI agent which users can interract with to modify the style of the map. Follow agents.md . 
 
 ## This needs to be very simple, clean code so i can maintain it in future. This will have 3d capabilities in future, to show buildings and other stuff. But for now just focus on perfective a clean 2d top-down view map wallpaper app, which later can be expanded to support 3d.
 
@@ -15,7 +15,7 @@ Total future stack:
 | Tiles        | OpenFreeMap                                                                                                                      |
 | App          | Nextjs client and server (use api routes for server stuff) + firebase (no firebase auth so use admin sdk and strictly in server) |
 | Search       | Nominatim (free, rate-limited) or MapTiler geocoding (100K free)                                                                 |
-| Search       | Dodopayments                                                                                                                     |
+| Payments     | Dodopayments                                                                                                                     |
 | Auth         | Clerk                                                                                                                            |
 | Style state  | Zustand                                                                                                                          |
 
@@ -78,4 +78,6 @@ plain
   "duration": 300,
   "delay": 0
 }
+
+
 

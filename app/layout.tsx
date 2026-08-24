@@ -1,27 +1,19 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
-  title: "mapwalls",
-  description: "mapwalls",
+  title: "Artografer",
+  description: "We allow users to explore and customize maps with various styles and features. It provides an interactive map interface where users can search for places, view different map layers, and personalize their map experience.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", geistMono.variable, "font-sans", inter.variable)}
+      className="font-sans antialiased"
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

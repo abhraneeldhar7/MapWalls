@@ -1,0 +1,90 @@
+| Category     | Technical Layers Inside   (can be wrong, check yourself form openfreemaps) |
+| ------------ | -------------------------------------------------- |
+| Water        | `water`, `waterway`, `water_name`                  |
+| Land         | `landcover`, `landuse`, `park`                     |
+| Roads        | `transportation`, `transportation_name`            |
+| Buildings    | `building`, `housenumber`                          |
+| Borders      | `boundary`                                         |
+| Labels       | `place`, `poi`, `aerodrome_label`, `mountain_peak` |
+
+
+Water:
+[Color Swatch] Ocean/Lake Color
+[Color Swatch] River Color  
+[Slider] Water Opacity
+[Slider] River Width
+[Toggle] Show River Names
+[Toggle] Show Lake Names
+[Toggle] Distinguish Ocean vs Lake Color
+
+
+
+Roads:
+[Toggle] Show Roads
+[Dropdown] Detail Level:
+   ├─ "Major Only" (motorway/trunk/primary)
+   ├─ "Standard" (+ secondary/tertiary)
+   ├─ "All Roads" (+ minor/path/service)
+   └─ "Everything" (+ tracks/ferries)
+[Color Swatch] Motorway Color
+[Color Swatch] Primary Road Color
+[Color Swatch] Local Street Color
+[Slider] Road Width
+[Slider] Road Glow/Blur
+[Toggle] Round Line Caps
+[Toggle] Show Road Names
+[Toggle] Show Highway Shields
+[Toggle] Color by Road Type
+[Toggle] Color by Surface (Paved vs Unpaved)
+
+
+
+Buildings:
+[Toggle] Show Buildings
+[Color Swatch] Building Fill
+[Color Swatch] Building Outline
+[Slider] Building Opacity
+[Toggle] Show House Numbers
+[Toggle] Color by Height
+   └─ [Gradient Editor] Low → High color range
+[Toggle] Show Only Tall Buildings (20m+)
+
+
+
+Labels:
+[Toggle] Show Place Names
+[Toggle] Show Road Names
+[Toggle] Show POI Icons
+[Toggle] Show POI Names
+[Dropdown] Label Density:
+   ├─ "Minimal" (only major cities)
+   ├── "Standard"
+   └─ "Everything" (allow overlap)
+[Color Swatch] Label Color
+[Color Swatch] Label Halo
+[Slider] Halo Blur (Sharp → Soft Glow)
+[Slider] Label Size
+[Dropdown] Label Case: Normal / UPPERCASE / lowercase
+[Slider] Letter Spacing
+
+
+
+
+Borders:
+[Toggle] Show Country Borders
+[Toggle] Show State Borders
+[Toggle] Show City Borders
+[Color Swatch] Border Color
+[Slider] Border Width
+[Dropdown] Border Style: Solid / Dashed / Dotted
+[Toggle] Highlight Disputed Borders
+[Toggle] Dashed Disputed Borders
+
+
+Default rpesets:
+┌─────────────────────────────────┐
+│                                           │
+│  [🌃 Night]  [🏙️ Minimal] [🗺️ Retro]    │
+│  [🌲 Nature] [🔵 Blueprint] [⚡ Neon]    │
+│  [🚇 Transit][📜 Parchment][🎨 Custom]   │
+└─────────────────────────────────┘

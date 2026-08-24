@@ -1,27 +1,22 @@
 "use client";
 
-import { Loader2, LocateFixed, MapPin, MapPinIcon, SearchIcon } from "lucide-react";
+import { MapPinIcon, SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useDebouncedAsync } from "@/hooks/useDebouncedAsync";
 import { searchPlaces, type PlaceResult } from "@/lib/api/services/geocode";
 import { Spinner } from "../ui/spinner";
+import { cn } from "@/lib/utils";
 
 const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 450;
 
 type SearchBarProps = {
   onSelectPlace: (place: PlaceResult) => void;
+  className?: string;
 };
 
-export function SearchBar({ onSelectPlace }: SearchBarProps) {
+export function SearchBar({ onSelectPlace, className }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [openResults, setOpenResults] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -70,7 +65,7 @@ export function SearchBar({ onSelectPlace }: SearchBarProps) {
   const [searchbarOpen, setSearchbarOpen] = useState(false);
 
   return (
-    <div className="fixed top-4 left-[50%] translate-x-[-50%] z-5 w-fit h-fit flex flex-col gap-1.5">
+    <div className={cn("w-fit h-fit flex flex-col gap-1.5", className)}>
       <div className={` transition-all ${searchbarOpen ? "gap-1.5 bg-background flex items-center rounded-[10px] p-[2px]" : "gap-0 rounded-0"} p-0`} >
         <Button
           className={`transition-all w-fit overflow-hidden duration-fast hover:scale-[0.97] active:scale-[0.95]  ${!searchbarOpen ? "max-w-100 p-3 oapcity-100" : "max-w-0 opacity-0 p-0"} bg-background`}
@@ -110,8 +105,8 @@ export function SearchBar({ onSelectPlace }: SearchBarProps) {
       </div>
 
       <div className="relative w-full">
-        {openResults &&
-          <div className="absolute top-0 h-fit w-full bg-muted p-1 rounded-[10px]">
+        {(openResults && results.length > 0) &&
+          <div className="absolute top-0 h-fit w-full bg-muted p-1 rounded-[10px] flex flex-col gap-1">
             {results.map((place) => (
               <Button size="sm" variant="ghost" className="w-full" onClick={() => select(place)}>
                 <span className="truncate">

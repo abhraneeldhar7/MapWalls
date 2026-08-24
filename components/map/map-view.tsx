@@ -1,20 +1,25 @@
 "use client";
 
-import type { RefObject } from "react";
-import { Map as ReactMapGL, type MapRef } from "react-map-gl/maplibre";
+import { useMemo } from "react";
+import type { Map as MapLibreMap } from "maplibre-gl";
+import { Map as ReactMapGL } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { OPENFREEMAP_DARK_STYLE } from "@/lib/api/services/endpoints";
+import { buildStyle } from "@/lib/map-style/presets";
+import { useMapInstance } from "@/lib/map-style/context";
 
-type MapViewProps = {
-  mapRef: RefObject<MapRef | null>;
-};
+export function MapView() {
+  const { setMap, values } = useMapInstance();
+  const style = useMemo(() => buildStyle(values), [values]);
 
-export function MapView({ mapRef }: MapViewProps) {
+  function handleLoad(event: { target: MapLibreMap }) {
+    setMap(event.target);
+  }
+
   return (
     <ReactMapGL
-      ref={mapRef}
-      mapStyle={OPENFREEMAP_DARK_STYLE}
-      initialViewState={{ longitude: 8, latitude: 25, zoom: 2 }}
+      mapStyle={style}
+      onLoad={handleLoad}
+      initialViewState={{ longitude: -122.4194, latitude: 37.7749, zoom: 11 }}
       style={{ width: "100%", height: "100%" }}
     />
   );

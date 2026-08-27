@@ -7,13 +7,14 @@ import { buildStyle } from "@/lib/styles";
 import { useMapProvider } from "@/components/providers/map-provider";
 
 export function MapView() {
-  const { styles } = useMapProvider();
+  const { styles, viewState, setViewState } = useMapProvider();
   const style = useMemo(() => buildStyle({ name: "Map", config: styles }), [styles]);
 
   return (
     <ReactMapGL
       mapStyle={style}
-      initialViewState={{ longitude: -122.4194, latitude: 37.7749, zoom: 11 }}
+      initialViewState={viewState}
+      onMove={(e) => setViewState(e.viewState)}
       style={{ width: "100%", height: "100%" }}
     />
   );

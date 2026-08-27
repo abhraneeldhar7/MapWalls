@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon, CopyIcon, MinusIcon, PlusIcon } from "@/components/ui/icons";
 import { HexColorPicker } from "react-colorful";
-import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,9 @@ import { useMapProvider } from "@/components/providers/map-provider";
 import { mapMenus, type ControlConfig, type MenuConfig, type SubEntityConfig } from "@/lib/controlPanelOptions";
 import { getPath, setPaths } from "@/lib/utils";
 import type { MapStyleConfig } from "@/lib/types";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ScrollArea } from "../ui/scroll-area";
 
 type Values = Partial<MapStyleConfig>;
 type SetStyles = (updater: (prev: Values) => Values) => void;
@@ -119,32 +117,12 @@ function ControlsGroup({ controls }: { controls: ControlConfig[] }) {
 }
 
 
-function SubMenuContent({ menu, onBack }: { menu: MenuConfig; onBack: () => void }) {
+function SubMenuContent({ menu }: { menu: { label: string; controls: ControlConfig[] } }) {
   return (
-    <div className="flex flex-col p-1.5 gap-4">
-      <div className="flex items-center gap-1">
-        <Button className="w-full justify-start" variant="secondary" onClick={onBack} aria-label="Back">
-          <ChevronLeftIcon />
-          Return
-        </Button>
-      </div>
-
+    <div className="flex flex-col p-1.5 gap-5">
       <p className="font-semibold text-center opacity-80">{menu.label}</p>
-
-      <div className="px-2 flex-1 space-y-5">
+      <div className="px-2 space-y-4">
         <ControlsGroup controls={menu.controls} />
-        {menu.submenu.length > 0 && (
-          <Accordion type="multiple">
-            {menu.submenu.map((sub: SubEntityConfig) => (
-              <AccordionItem key={sub.id} value={sub.id}>
-                <AccordionTrigger>{sub.label}</AccordionTrigger>
-                <AccordionContent>
-                  <ControlsGroup controls={sub.controls} />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        )}
       </div>
     </div>
   );
@@ -173,10 +151,47 @@ export default function CustomizeSidebar() {
           </TransitionBox>
           <TransitionBox activationIndex={1} currentIndex={index}>
             {subMenu && (
-              <SubMenuContent
-                menu={subMenu}
-                onBack={() => setIndex(0)}
-              />
+              <div className="p-1.5 space-y-4">
+                <div className="flex items-center">
+                  <Button className="w-full justify-start" variant="secondary" onClick={() => setIndex(0)} aria-label="Back">
+                    <ChevronLeftIcon />
+                    Return
+                  </Button>
+                </div>
+                <SubMenuContent menu={subMenu} />
+
+                {/* <div className="border rounded-md w-full h-40 bg-muted">
+                  preview here
+                </div> */}
+
+                {subMenu.submenu.length > 0 && (
+                  <Button variant="secondary" className="justify-end w-full" onClick={() => setIndex(2)}>Advanced <ChevronRightIcon /></Button>
+                )}
+              </div>
+            )}
+          </TransitionBox>
+
+          <TransitionBox activationIndex={2} currentIndex={index}>
+            {subMenu && subMenu.submenu.length > 0 && (
+              <div className="p-1.5 space-y-4">
+                <div className="flex items-center">
+                  <Button className="w-full justify-start" variant="secondary" onClick={() => setIndex(1)} aria-label="Back">
+                    <ChevronLeftIcon />
+                    Return
+                  </Button>
+                </div>
+                <div className="space-y-5">
+                  {subMenu.submenu.map((sub: SubEntityConfig, index) => (
+                    <div key={index} className="flex flex-col gap-4">
+                      <p className="font-semibold text-center opacity-80">{sub.label}</p>
+                      <ControlsGroup controls={sub.controls} />
+                    </div>
+                  ))}
+                </div>
+                {/* <div className="fixed bottom-0 z-2 border rounded-md h-40 bg-muted">
+                  preview here
+                </div> */}
+              </div>
             )}
           </TransitionBox>
         </div>

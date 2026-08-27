@@ -7,3 +7,4 @@
 - Don't messup my beautiful comments, and dont add comments if not asked to.
 - I make often make heavy changes between prompts, don't overwrite those.
 - Dont npm build or lint if not asked to.
+- Follow, query notes\ULTIMATE_MAP_STYLE_CONFIG_SHEET.md it will save tokens and websearch time.

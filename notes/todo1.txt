@@ -1,0 +1,37 @@
+> saucy default center coordinates.
+> default state whole.
+> needed layers: runaways, taxiways, aprons, helipads, railways, every types of paths paths put these in roads.
+> building height multiplier. make parks same as buildings style.
+> all road (all sorts of paths) and water things (rivers, etc) and land things (forest, grass, sand, etc) and Boundaries (country, state borders, etc)  separate color picker, thickness multiplier, opacity (with percentage), glow slider.
+ line-cap, linejoin might be useful.
+
+> learn these:{
+line-cap
+line-join
+line-miter-limit
+line-round-limit
+line-translate
+line-translate-anchor
+}
+
+> explore 3.6 later. explain 6. zoom functions.
+> show some picture/illustration/live-render of map portion based on UI controlls.
+
+> right now at this level tell me what pieces of files and data i should replace with dummy data then add those to gitignore so people can't copy this fully when they fork my opensourced repo.
+> in land thing too
+
+
+> categtory UI, color picker, other things fix.
+
+
+templates: styling values.
+map: template + texts + location + edge feather.
+
+
+
+
+
+
+
+photoshop for readme makers.
+

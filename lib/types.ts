@@ -29,6 +29,7 @@ export type BuildingField = {
 export type LabelField = {
   show?: boolean;
   color?: string;
+  opacity?: number;
   haloColor?: string;
   haloWidth?: number;
   haloBlur?: number;
@@ -49,15 +50,14 @@ export type MapStyleConfig = {
   };
   land: {
     show?: boolean;
-    opacity?: number;
-    forest?: string;
-    grass?: string;
-    sand?: string;
-    ice?: string;
-    residential?: string;
-    commercial?: string;
-    industrial?: string;
-    park?: string;
+    forest?: FillField;
+    grass?: FillField;
+    sand?: FillField;
+    ice?: FillField;
+    residential?: FillField;
+    commercial?: FillField;
+    industrial?: FillField;
+    park?: FillField;
   };
   water: {
     ocean?: FillField;

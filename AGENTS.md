@@ -8,3 +8,4 @@
 - I make often make heavy changes between prompts, don't overwrite those.
 - Dont npm build or lint if not asked to.
 - Follow, query notes\ULTIMATE_MAP_STYLE_CONFIG_SHEET.md it will save tokens and websearch time.
+- Don't add visual design classNames to style already made components. Required positioning styles are fine.

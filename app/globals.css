@@ -44,7 +44,7 @@
   --radius-lg: 20px;
 
   --transition-duration-fast: 200ms;
-  --transition-duration-default: 350ms;
+  --transition-duration-default: 400ms;
   --transition-duration-slow: 600ms;
 }
 
@@ -113,7 +113,7 @@
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(95.815% 0.00011 271.152);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
+  --muted: oklch(95.514% 0.00011 271.152);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);

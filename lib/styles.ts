@@ -136,6 +136,10 @@ const LAYERS: LayerDef[] = [
   },
 ];
 
+function opacity01(opacity: number | undefined): number {
+  return opacity === undefined ? 1 : opacity / 100;
+}
+
 function get(config: Partial<MapStyleConfig>, path: string): FieldBase | undefined {
   return path.split(".").reduce<FieldBase | undefined>((acc, key) => {
     if (acc && typeof acc === "object") return (acc as Record<string, unknown>)[key] as FieldBase;
@@ -147,16 +151,17 @@ function paintProps(type: LayerDef["type"], field: FieldBase): Record<string, un
   const paint: Record<string, unknown> = {};
   if (type === "fill") {
     if (field.color) paint["fill-color"] = field.color;
-    if (field.opacity !== undefined) paint["fill-opacity"] = field.opacity;
+    if (field.opacity !== undefined) paint["fill-opacity"] = opacity01(field.opacity);
     if (field.outline) paint["fill-outline-color"] = field.outline;
   } else if (type === "line") {
     if (field.color) paint["line-color"] = field.color;
     if (field.width !== undefined) paint["line-width"] = field.width;
-    if (field.opacity !== undefined) paint["line-opacity"] = field.opacity;
+    if (field.opacity !== undefined) paint["line-opacity"] = opacity01(field.opacity);
     if (field.blur !== undefined) paint["line-blur"] = field.blur;
     if (field.dash) paint["line-dasharray"] = field.dash;
   } else {
     paint["text-color"] = field.color ?? "#111111";
+    if (field.opacity !== undefined) paint["text-opacity"] = opacity01(field.opacity);
     if (field.haloColor) paint["text-halo-color"] = field.haloColor;
     if (field.haloWidth !== undefined) paint["text-halo-width"] = field.haloWidth;
     if (field.haloBlur !== undefined) paint["text-halo-blur"] = field.haloBlur;
@@ -198,7 +203,7 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
       paint: {
         ...(c.background.color ? { "background-color": c.background.color } : {}),
         ...(c.background.opacity !== undefined
-          ? { "background-opacity": c.background.opacity }
+          ? { "background-opacity": opacity01(c.background.opacity) }
           : {}),
       },
     });
@@ -215,29 +220,34 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
       ["landuse-commercial", "landuse", "commercial", land.commercial],
       ["landuse-industrial", "landuse", "industrial", land.industrial],
     ] as const;
-    for (const [id, sourceLayer, cls, color] of classes) {
-      if (!color) continue;
+    for (const [id, sourceLayer, cls, field] of classes) {
+      if (!field || field.show === false) continue;
       layers.push({
         id,
         type: "fill",
         source: "openmaptiles",
         "source-layer": sourceLayer,
+        ...(field.minZoom !== undefined ? { minzoom: field.minZoom } : {}),
         filter: ["==", ["get", "class"], cls],
         paint: {
-          "fill-color": color,
-          ...(land.opacity !== undefined ? { "fill-opacity": land.opacity } : {}),
+          ...(field.color ? { "fill-color": field.color } : {}),
+          ...(field.opacity !== undefined
+            ? { "fill-opacity": opacity01(field.opacity) }
+            : {}),
         },
       });
     }
-    if (land.park) {
+    if (land.park && land.park.show !== false) {
+      const park = land.park;
       layers.push({
         id: "park",
         type: "fill",
         source: "openmaptiles",
         "source-layer": "park",
+        ...(park.minZoom !== undefined ? { minzoom: park.minZoom } : {}),
         paint: {
-          "fill-color": land.park,
-          ...(land.opacity !== undefined ? { "fill-opacity": land.opacity } : {}),
+          ...(park.color ? { "fill-color": park.color } : {}),
+          ...(park.opacity !== undefined ? { "fill-opacity": opacity01(park.opacity) } : {}),
         },
       });
     }
@@ -274,7 +284,7 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
       paint: {
         ...(buildings.color ? { "fill-extrusion-color": buildings.color } : {}),
         ...(buildings.opacity !== undefined
-          ? { "fill-extrusion-opacity": buildings.opacity }
+          ? { "fill-extrusion-opacity": opacity01(buildings.opacity) }
           : {}),
         "fill-extrusion-height": [
           "*",

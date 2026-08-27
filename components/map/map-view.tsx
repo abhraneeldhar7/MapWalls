@@ -1,12 +1,14 @@
 "use client";
 
+import { useMemo } from "react";
 import { Map as ReactMapGL } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { buildStyle } from "@/lib/styles";
-import { templates } from "@/lib/templates";
+import { useMapProvider } from "@/components/providers/map-provider";
 
 export function MapView() {
-  const style = buildStyle(templates[0]);
+  const { styles } = useMapProvider();
+  const style = useMemo(() => buildStyle({ name: "Map", config: styles }), [styles]);
 
   return (
     <ReactMapGL

@@ -13,7 +13,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className="font-sans antialiased"
     >
-      <body>{children}</body>
+      <body>
+        {children}
+      </body>
     </html>
   );
 }

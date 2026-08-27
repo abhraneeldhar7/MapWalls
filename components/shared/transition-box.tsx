@@ -17,12 +17,12 @@ export function TransitionBox({
   return (
     <div
       className={cn(
-        "transition-all overflow-hidden duration-slow min-w-0 w-full",
+        "absolute inset-0 w-full min-w-0 transition-all will-change-all ease-out",
         active
-          ? "opacity-100 max-h-[800px] h-full translate-x-[0%]"
-          : currentIndex < activationIndex
-            ? "translate-x-[-100%] opacity-0 h-0 max-h-0"
-            : "translate-x-[100%] opacity-0 h-0 max-h-0",
+          ? "translate-x-0"
+          : activationIndex > currentIndex
+            ? "translate-x-full opacity-0"
+            : "-translate-x-full opacity-100",
         className
       )}
     >

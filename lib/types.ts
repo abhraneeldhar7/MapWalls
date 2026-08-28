@@ -3,7 +3,7 @@ export type FillField = {
   color?: string;
   opacity?: number;
   outline?: string;
-  minZoom?: number;
+  minzoom?: number;
 };
 
 export type LineField = {
@@ -13,17 +13,14 @@ export type LineField = {
   opacity?: number;
   blur?: number;
   dash?: number[];
-  minZoom?: number;
+  minzoom?: number;
 };
 
 export type BuildingField = {
   show?: boolean;
   color?: string;
   opacity?: number;
-  height?: number;
-  base?: number;
-  verticalGradient?: boolean;
-  minZoom?: number;
+  minzoom?: number;
 };
 
 export type LabelField = {
@@ -40,7 +37,7 @@ export type LabelField = {
   allowOverlap?: boolean;
   classes?: string[];
   rank?: number;
-  minZoom?: number;
+  minzoom?: number;
 };
 
 export type MapStyleConfig = {
@@ -54,6 +51,9 @@ export type MapStyleConfig = {
     grass?: FillField;
     sand?: FillField;
     ice?: FillField;
+    rock?: FillField;
+    wetland?: FillField;
+    farmland?: FillField;
     residential?: FillField;
     commercial?: FillField;
     industrial?: FillField;
@@ -64,11 +64,14 @@ export type MapStyleConfig = {
     lake?: FillField;
     river?: LineField;
     stream?: LineField;
+    density?: number;
   };
   roads: {
     show?: boolean;
     lineCap?: "butt" | "round" | "square";
     lineJoin?: "bevel" | "round" | "miter";
+    hideTunnels?: boolean;
+    hideBridges?: boolean;
     motorway?: LineField;
     trunk?: LineField;
     primary?: LineField;
@@ -77,6 +80,13 @@ export type MapStyleConfig = {
     minor?: LineField;
     service?: LineField;
     path?: LineField;
+    track?: LineField;
+    pedestrian?: LineField;
+    street?: LineField;
+    street_limited?: LineField;
+    rail?: LineField;
+    transit?: LineField;
+    density?: number;
   };
   buildings: BuildingField;
   borders: {

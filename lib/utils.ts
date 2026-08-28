@@ -12,6 +12,10 @@ export function getPath(obj: object, path: string): unknown {
   }, obj)
 }
 
+export function copyToClipboard(text: string): Promise<void> {
+  return navigator.clipboard.writeText(text);
+}
+
 export function setPaths<T extends object>(obj: T, paths: string[], value: unknown): T {
   const next = structuredClone(obj)
   for (const path of paths) {

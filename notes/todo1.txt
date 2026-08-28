@@ -28,7 +28,13 @@ templates: styling values.
 map: template + texts + location + edge feather.
 
 
-
+make seaprate provider for editor, inside the mapprovider level. (between mapprovider and sidebar provider).
+sidebar scrollfix.
+mobile drawer.
+boundaries not working properly, for country and not all boundaries are covered. and state boundaries not working.
+what are all the controlls available for boundaries and buildings.
+make minzoom to minZoom keep the camelcase.
+bridges and shit missing
 
 
 

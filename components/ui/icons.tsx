@@ -7,7 +7,7 @@ type IconSvgObject = ReadonlyArray<readonly [string, { readonly [key: string]: s
 
 function makeIcon(icon: IconSvgObject) {
   return function Icon(props: { className?: string }) {
-    return <HugeiconsIcon icon={icon} className={props.className} />;
+    return <HugeiconsIcon strokeWidth={2} icon={icon} className={props.className} />;
   };
 }
 
@@ -28,5 +28,8 @@ export const InfoIcon = makeIcon(H.InfoIcon);
 export const TriangleAlertIcon = makeIcon(H.TriangleAlertIcon);
 export const CircleCheckIcon = makeIcon(H.CircleCheckIcon);
 export const OctagonXIcon = makeIcon(H.OctagonXIcon);
+export const Location05Icon = makeIcon(H.Location05Icon);
+export const Tick02Icon = makeIcon(H.Tick02Icon);
+export const CheckmarkBadge02Icon = makeIcon(H.CheckmarkBadge02Icon)
 
 export { HugeiconsIcon };

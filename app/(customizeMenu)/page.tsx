@@ -2,22 +2,38 @@
 
 import CustomizeSidebar from "@/components/customizeMenu/sidebar";
 import { MapView } from "@/components/map/map-view";
+import SearchBar from "@/components/map/searchBar";
 import { useMapProvider } from "@/components/providers/map-provider";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarRail } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+const showDebug = false
 
 export default function Home() {
   const { styles, viewState } = useMapProvider();
   const isMobile = useIsMobile();
-
   return (
-    <main className="relative h-dvh w-full overflow-hidden relative">
+    <main className="relative h-dvh w-full overflow-hidden">
       {!isMobile &&
-        <CustomizeSidebar />
+        <div className="relative">
+          <CustomizeSidebar />
+          {/* <SidebarRail className=""/> */}
+        </div>
       }
+
+      <div className="fixed z-5 top-0 w-full p-4 flex items-center justify-between">
+        <div />
+        <SearchBar />
+        <Button>Create</Button>
+      </div>
+
+
       <MapView />
-      {!isMobile && process.env.NEXT_PUBLIC_ENVIRONMENT === "dev" &&
+
+
+      {showDebug && !isMobile && process.env.NEXT_PUBLIC_ENVIRONMENT === "dev" &&
         <Sidebar className="w-[300px]" variant="inset" side="right">
           <SidebarContent className="p-2">
             <Label>View state</Label>

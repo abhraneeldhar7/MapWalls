@@ -1,5 +1,6 @@
 import type { StyleSpecification } from "maplibre-gl";
-import type { LabelField, MapStyleConfig, MapTemplate } from "./types";
+import type { MapStyleConfig, MapTemplate } from "./types";
+import { getPath } from "./utils";
 
 export const BLANK_BASE: StyleSpecification = {
   version: 8,
@@ -23,11 +24,17 @@ const ROAD_CLASSES = [
   "minor",
   "service",
   "path",
+  "track",
+  "pedestrian",
+  "street",
+  "street_limited",
+  "rail",
+  "transit",
 ] as const;
 
 type FieldBase = {
   show?: boolean;
-  minZoom?: number;
+  minzoom?: number;
   color?: string;
   opacity?: number;
   outline?: string;
@@ -54,6 +61,14 @@ type LayerDef = {
   filter?: unknown;
   baseLayout?: Record<string, unknown>;
 };
+
+const DENSITY_STEP = 1.2;
+
+function zoomFor(minzoom: number | undefined, density?: number): number {
+  const base = minzoom ?? 5;
+  const d = density ?? 5;
+  return Math.max(0, Math.min(16, Math.round(base + (5 - d) * DENSITY_STEP)));
+}
 
 const LAYERS: LayerDef[] = [
   {
@@ -140,12 +155,22 @@ function opacity01(opacity: number | undefined): number {
   return opacity === undefined ? 1 : opacity / 100;
 }
 
-function get(config: Partial<MapStyleConfig>, path: string): FieldBase | undefined {
-  return path.split(".").reduce<FieldBase | undefined>((acc, key) => {
-    if (acc && typeof acc === "object") return (acc as Record<string, unknown>)[key] as FieldBase;
-    return undefined;
-  }, config as unknown as FieldBase);
-}
+const ROAD_BASE_WIDTH: Record<string, [number, number]> = {
+  motorway:  [1.2, 4],
+  trunk:     [1.0, 3.5],
+  primary:   [0.8, 3],
+  secondary: [0.6, 2.5],
+  tertiary:  [0.5, 2],
+  minor:     [0.35, 1.5],
+  service:   [0.25, 1],
+  path:      [0.15, 0.6],
+  track:     [0.15, 0.6],
+  pedestrian: [0.3, 1.4],
+  street:    [0.35, 1.5],
+  street_limited: [0.35, 1.5],
+  rail:      [0.2, 1],
+  transit:   [0.2, 1],
+};
 
 function paintProps(type: LayerDef["type"], field: FieldBase): Record<string, unknown> {
   const paint: Record<string, unknown> = {};
@@ -216,6 +241,9 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
       ["landcover-grass", "landcover", "grass", land.grass],
       ["landcover-sand", "landcover", "sand", land.sand],
       ["landcover-ice", "landcover", "ice", land.ice],
+      ["landcover-rock", "landcover", "rock", land.rock],
+      ["landcover-wetland", "landcover", "wetland", land.wetland],
+      ["landcover-farmland", "landcover", "farmland", land.farmland],
       ["landuse-residential", "landuse", "residential", land.residential],
       ["landuse-commercial", "landuse", "commercial", land.commercial],
       ["landuse-industrial", "landuse", "industrial", land.industrial],
@@ -227,7 +255,7 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
         type: "fill",
         source: "openmaptiles",
         "source-layer": sourceLayer,
-        ...(field.minZoom !== undefined ? { minzoom: field.minZoom } : {}),
+        minzoom: zoomFor(field.minzoom),
         filter: ["==", ["get", "class"], cls],
         paint: {
           ...(field.color ? { "fill-color": field.color } : {}),
@@ -244,7 +272,7 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
         type: "fill",
         source: "openmaptiles",
         "source-layer": "park",
-        ...(park.minZoom !== undefined ? { minzoom: park.minZoom } : {}),
+        minzoom: zoomFor(park.minzoom),
         paint: {
           ...(park.color ? { "fill-color": park.color } : {}),
           ...(park.opacity !== undefined ? { "fill-opacity": opacity01(park.opacity) } : {}),
@@ -253,66 +281,89 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
     }
   }
 
-  if (c.roads && c.roads.show !== false) {
-    for (const cls of ROAD_CLASSES) {
-      const field = c.roads[cls];
-      if (!field || field.show === false) continue;
-      layers.push({
-        id: `road-${cls}`,
-        type: "line",
-        source: "openmaptiles",
-        "source-layer": "transportation",
-        ...(field.minZoom !== undefined ? { minzoom: field.minZoom } : {}),
-        filter: ["==", ["get", "class"], cls],
-        layout: {
-          "line-cap": c.roads.lineCap ?? "round",
-          "line-join": c.roads.lineJoin ?? "round",
-        },
-        paint: paintProps("line", field),
-      });
-    }
+  for (const def of LAYERS) {
+    if (!def.path.startsWith("water.") || def.type === "symbol") continue;
+    const field = getPath(c, def.path) as FieldBase | undefined;
+    if (!field || field.show === false) continue;
+    const waterDensity = c.water?.density;
+    const layer: Record<string, unknown> = {
+      id: def.id,
+      type: def.type,
+      source: "openmaptiles",
+      "source-layer": def.sourceLayer,
+      minzoom: zoomFor(field.minzoom, waterDensity),
+    };
+    if (def.filter) layer.filter = def.filter;
+    layer.paint = paintProps(def.type, field);
+    layers.push(layer);
   }
 
   if (c.buildings && c.buildings.show !== false) {
     const buildings = c.buildings;
     layers.push({
       id: "building",
-      type: "fill-extrusion",
+      type: "fill",
       source: "openmaptiles",
       "source-layer": "building",
-      ...(buildings.minZoom !== undefined ? { minzoom: buildings.minZoom } : {}),
+      minzoom: 4,
       paint: {
-        ...(buildings.color ? { "fill-extrusion-color": buildings.color } : {}),
+        ...(buildings.color ? { "fill-color": buildings.color } : {}),
         ...(buildings.opacity !== undefined
-          ? { "fill-extrusion-opacity": opacity01(buildings.opacity) }
-          : {}),
-        "fill-extrusion-height": [
-          "*",
-          ["get", "render_height"],
-          buildings.height ?? 1,
-        ],
-        "fill-extrusion-base": [
-          "*",
-          ["get", "render_min_height"],
-          buildings.base ?? 1,
-        ],
-        ...(buildings.verticalGradient !== undefined
-          ? { "fill-extrusion-vertical-gradient": buildings.verticalGradient }
+          ? { "fill-opacity": opacity01(buildings.opacity) }
           : {}),
       },
     });
   }
 
+  if (c.roads && c.roads.show !== false) {
+    for (const cls of ROAD_CLASSES) {
+      const field = c.roads[cls];
+      if (!field || field.show === false) continue;
+      const base = ROAD_BASE_WIDTH[cls] ?? [0.5, 2];
+      const multiplier = field.width ?? 1;
+      const brunnelFilters: unknown[] = [];
+      if (c.roads.hideTunnels) brunnelFilters.push(["!=", ["get", "brunnel"], "tunnel"]);
+      if (c.roads.hideBridges) brunnelFilters.push(["!=", ["get", "brunnel"], "bridge"]);
+      const filter = brunnelFilters.length === 0
+        ? ["==", ["get", "class"], cls]
+        : ["all", ["==", ["get", "class"], cls], ...brunnelFilters];
+      layers.push({
+        id: `road-${cls}`,
+        type: "line",
+        source: "openmaptiles",
+        "source-layer": "transportation",
+        minzoom: zoomFor(field.minzoom, c.roads.density),
+        filter,
+        layout: {
+          "line-cap": c.roads.lineCap ?? "round",
+          "line-join": c.roads.lineJoin ?? "round",
+        },
+        paint: {
+          ...paintProps("line", field),
+          "line-width": [
+            "interpolate", ["linear"], ["zoom"],
+            4, base[0] * multiplier * 0.5,
+            14, base[0] * multiplier * 1.5,
+            20, base[1] * multiplier,
+          ],
+        },
+      });
+    }
+  }
+
   for (const def of LAYERS) {
-    const field = get(c, def.path);
+    if (def.path.startsWith("water.") && def.type !== "symbol") continue;
+    const field = getPath(c, def.path) as FieldBase | undefined;
     if (!field || field.show === false) continue;
+    const waterDensity = def.path.startsWith("water.") ? c.water?.density : undefined;
+    const minzoom = def.path.startsWith("borders.") ? 0 : zoomFor(field.minzoom, waterDensity);
     const layer: Record<string, unknown> = {
       id: def.id,
       type: def.type,
       source: "openmaptiles",
       "source-layer": def.sourceLayer,
+      minzoom,
     };
-    if (field.minZoom !== undefined) layer.minzoom = field.minZoom;
     const filter = def.type === "symbol" ? labelFilter(field, def.filter) : def.filter;
     if (filter) layer.filter = filter;
     if (def.type === "symbol") layer.layout = labelLayout(field, def.baseLayout ?? {});

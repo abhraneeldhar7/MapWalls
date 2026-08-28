@@ -2,7 +2,7 @@ import * as H from "@hugeicons/core-free-icons";
 
 type IconSvgObject = ReadonlyArray<readonly [string, { readonly [key: string]: string | number }]>;
 
-export type ControlType = "switch" | "color" | "slider" | "buttongroup";
+export type ControlType = "switch" | "color" | "slider" | "buttongroup" | "select";
 
 export type ControlConfig = {
   label: string;
@@ -11,7 +11,8 @@ export type ControlConfig = {
   min?: number;
   max?: number;
   step?: number;
-  defaultValue?: number;
+  defaultValue?: number | string;
+  options?: { label: string; value: string }[];
 };
 
 export type SubEntityConfig = {
@@ -38,6 +39,12 @@ const ROADS = [
   "minor",
   "service",
   "path",
+  "track",
+  "pedestrian",
+  "street",
+  "street_limited",
+  "rail",
+  "transit",
 ] as const;
 
 const ROAD_ICONS: Record<(typeof ROADS)[number], IconSvgObject> = {
@@ -49,18 +56,27 @@ const ROAD_ICONS: Record<(typeof ROADS)[number], IconSvgObject> = {
   minor: H.PathIcon,
   service: H.Wrench01Icon,
   path: H.HikingIcon,
+  track: H.RoadIcon,
+  pedestrian: H.WalkingIcon,
+  street: H.RoadLocation01Icon,
+  street_limited: H.RoadLocation02Icon,
+  rail: H.Train01Icon,
+  transit: H.Train02Icon,
 };
+
+const roadLabel = (cls: string) => (cls === "street_limited" ? "Street limited" : cls.charAt(0).toUpperCase() + cls.slice(1));
 
 const roadPaths = (suffix: string) => ROADS.map((cls) => `roads.${cls}.${suffix}`);
 const roadSubmenu: SubEntityConfig[] = ROADS.map((cls) => ({
   id: cls,
-  label: cls.charAt(0).toUpperCase() + cls.slice(1),
+  label: roadLabel(cls),
   icon: ROAD_ICONS[cls],
   controls: [
     { label: "Show", type: "switch", targets: [`roads.${cls}.show`] },
     { label: "Color", type: "color", targets: [`roads.${cls}.color`] },
     { label: "Opacity", type: "slider", targets: [`roads.${cls}.opacity`], min: 0, max: 100, step: 1, defaultValue: 100 },
-    { label: "Thickness", type: "slider", targets: [`roads.${cls}.width`], min: 0.5, max: 3, step: 0.1, defaultValue: 1 },
+    { label: "Thickness", type: "slider", targets: [`roads.${cls}.width`], min: 0.2, max: 3, step: 0.1, defaultValue: 1 },
+    { label: "Density", type: "buttongroup", targets: [`roads.${cls}.minzoom`], min: 0, max: 16, step: 1, defaultValue: 5 },
   ],
 }));
 
@@ -69,6 +85,9 @@ const LAND_CLASSES = [
   ["grass", "grass"],
   ["sand", "sand"],
   ["ice", "ice"],
+  ["rock", "rock"],
+  ["wetland", "wetland"],
+  ["farmland", "farmland"],
   ["residential", "residential"],
   ["commercial", "commercial"],
   ["industrial", "industrial"],
@@ -80,6 +99,9 @@ const LAND_ICONS: Record<(typeof LAND_CLASSES)[number][0], IconSvgObject> = {
   grass: H.SproutIcon,
   sand: H.DesertIcon,
   ice: H.SnowflakeIcon,
+  rock: H.MountainIcon,
+  wetland: H.WavesIcon,
+  farmland: H.WheatIcon,
   residential: H.Home01Icon,
   commercial: H.Store01Icon,
   industrial: H.Factory01Icon,
@@ -119,6 +141,7 @@ const waterSubmenu: SubEntityConfig[] = WATER_ENTITIES.map(([id, label]) => ({
     { label: "Show", type: "switch", targets: [`water.${id}.show`] },
     { label: "Color", type: "color", targets: [`water.${id}.color`] },
     { label: "Opacity", type: "slider", targets: [`water.${id}.opacity`], min: 0, max: 100, step: 1, defaultValue: 100 },
+    { label: "Density", type: "buttongroup", targets: [`water.${id}.minzoom`], min: 0, max: 16, step: 1, defaultValue: 5 },
     ...(id === "river" || id === "stream"
       ? [{ label: "Thickness", type: "slider" as const, targets: [`water.${id}.width`], min: 0.5, max: 3, step: 0.1, defaultValue: 1 }]
       : []),
@@ -181,7 +204,7 @@ export const mapMenus: MenuConfig[] = [
     label: "Land",
     icon: H.Tree01Icon,
     controls: [
-      { label: "Show land", type: "switch", targets: ["land.show"] },
+      { label: "Show land", type: "switch", targets: ["land.show", ...LAND_CLASSES.map(([, key]) => `land.${key}.show`)] },
       {
         label: "Color",
         type: "color",
@@ -207,7 +230,20 @@ export const mapMenus: MenuConfig[] = [
       { label: "Show roads", type: "switch", targets: ["roads.show"] },
       { label: "Color", type: "color", targets: roadPaths("color") },
       { label: "Opacity", type: "slider", targets: roadPaths("opacity"), min: 0, max: 100, step: 1, defaultValue: 100 },
-      { label: "Thickness", type: "slider", targets: roadPaths("width"), min: 0.5, max: 3, step: 0.1, defaultValue: 1 },
+      { label: "Thickness", type: "slider", targets: roadPaths("width"), min: 0.2, max: 3, step: 0.1, defaultValue: 1 },
+      { label: "Density", type: "buttongroup", targets: ["roads.density"], min: 0, max: 10, step: 1, defaultValue: 5 },
+      { label: "Line cap", type: "select", targets: ["roads.lineCap"], defaultValue: "round", options: [
+        { label: "Butt", value: "butt" },
+        { label: "Round", value: "round" },
+        { label: "Square", value: "square" },
+      ] },
+      { label: "Line join", type: "select", targets: ["roads.lineJoin"], defaultValue: "round", options: [
+        { label: "Bevel", value: "bevel" },
+        { label: "Round", value: "round" },
+        { label: "Miter", value: "miter" },
+      ] },
+      { label: "Hide tunnels", type: "switch", targets: ["roads.hideTunnels"] },
+      { label: "Hide bridges", type: "switch", targets: ["roads.hideBridges"] },
     ],
     submenu: roadSubmenu,
   },
@@ -220,6 +256,7 @@ export const mapMenus: MenuConfig[] = [
       { label: "Color", type: "color", targets: WATER_ENTITIES.map(([id]) => `water.${id}.color`) },
       { label: "Opacity", type: "slider", targets: WATER_ENTITIES.map(([id]) => `water.${id}.opacity`), min: 0, max: 100, step: 1, defaultValue: 100 },
       { label: "Thickness", type: "slider", targets: ["water.river.width", "water.stream.width"], min: 0.5, max: 3, step: 0.1, defaultValue: 1 },
+      { label: "Density", type: "buttongroup", targets: ["water.density"], min: 0, max: 10, step: 1, defaultValue: 5 },
     ],
     submenu: waterSubmenu,
   },
@@ -231,7 +268,6 @@ export const mapMenus: MenuConfig[] = [
       { label: "Show buildings", type: "switch", targets: ["buildings.show"] },
       { label: "Color", type: "color", targets: ["buildings.color"] },
       { label: "Opacity", type: "slider", targets: ["buildings.opacity"], min: 0, max: 100, step: 1, defaultValue: 100 },
-      { label: "Height", type: "slider", targets: ["buildings.height"], min: 1, max: 5, step: 0.5, defaultValue: 1 },
     ],
     submenu: [],
   },

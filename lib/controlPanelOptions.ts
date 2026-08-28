@@ -11,7 +11,7 @@ export type ControlConfig = {
   min?: number;
   max?: number;
   step?: number;
-  defaultValue?: number | string;
+  defaultValue?: number | string | boolean;
   options?: { label: string; value: string }[];
 };
 
@@ -76,7 +76,7 @@ const roadSubmenu: SubEntityConfig[] = ROADS.map((cls) => ({
     { label: "Color", type: "color", targets: [`roads.${cls}.color`] },
     { label: "Opacity", type: "slider", targets: [`roads.${cls}.opacity`], min: 0, max: 100, step: 1, defaultValue: 100 },
     { label: "Thickness", type: "slider", targets: [`roads.${cls}.width`], min: 0.2, max: 3, step: 0.1, defaultValue: 1 },
-    { label: "Density", type: "buttongroup", targets: [`roads.${cls}.minzoom`], min: 0, max: 16, step: 1, defaultValue: 5 },
+    { label: "Density", type: "buttongroup", targets: [`roads.${cls}.minZoom`], min: 0, max: 16, step: 1, defaultValue: 5 },
   ],
 }));
 
@@ -141,7 +141,7 @@ const waterSubmenu: SubEntityConfig[] = WATER_ENTITIES.map(([id, label]) => ({
     { label: "Show", type: "switch", targets: [`water.${id}.show`] },
     { label: "Color", type: "color", targets: [`water.${id}.color`] },
     { label: "Opacity", type: "slider", targets: [`water.${id}.opacity`], min: 0, max: 100, step: 1, defaultValue: 100 },
-    { label: "Density", type: "buttongroup", targets: [`water.${id}.minzoom`], min: 0, max: 16, step: 1, defaultValue: 5 },
+    { label: "Density", type: "buttongroup", targets: [`water.${id}.minZoom`], min: 0, max: 16, step: 1, defaultValue: 5 },
     ...(id === "river" || id === "stream"
       ? [{ label: "Thickness", type: "slider" as const, targets: [`water.${id}.width`], min: 0.5, max: 3, step: 0.1, defaultValue: 1 }]
       : []),
@@ -151,11 +151,15 @@ const waterSubmenu: SubEntityConfig[] = WATER_ENTITIES.map(([id, label]) => ({
 const BORDER_ENTITIES = [
   ["country", "Country"],
   ["state", "State"],
+  ["county", "County"],
+  ["city", "City"],
 ] as const;
 
 const BORDER_ICONS: Record<(typeof BORDER_ENTITIES)[number][0], IconSvgObject> = {
   country: H.GlobeIcon,
   state: H.Flag01Icon,
+  county: H.MapIcon,
+  city: H.MapPinIcon,
 };
 
 const borderSubmenu: SubEntityConfig[] = BORDER_ENTITIES.map(([id, label]) => ({
@@ -242,8 +246,8 @@ export const mapMenus: MenuConfig[] = [
         { label: "Round", value: "round" },
         { label: "Miter", value: "miter" },
       ] },
-      { label: "Hide tunnels", type: "switch", targets: ["roads.hideTunnels"] },
-      { label: "Hide bridges", type: "switch", targets: ["roads.hideBridges"] },
+      { label: "Hide tunnels", type: "switch", targets: ["roads.hideTunnels"], defaultValue: false },
+      { label: "Hide bridges", type: "switch", targets: ["roads.hideBridges"], defaultValue: false },
     ],
     submenu: roadSubmenu,
   },
@@ -280,6 +284,8 @@ export const mapMenus: MenuConfig[] = [
       { label: "Color", type: "color", targets: BORDER_ENTITIES.map(([id]) => `borders.${id}.color`) },
       { label: "Opacity", type: "slider", targets: BORDER_ENTITIES.map(([id]) => `borders.${id}.opacity`), min: 0, max: 100, step: 1, defaultValue: 100 },
       { label: "Thickness", type: "slider", targets: BORDER_ENTITIES.map(([id]) => `borders.${id}.width`), min: 0.5, max: 3, step: 0.1, defaultValue: 1 },
+      { label: "Show maritime", type: "switch", targets: ["borders.showMaritime"] },
+      { label: "Show disputed", type: "switch", targets: ["borders.showDisputed"] },
     ],
     submenu: borderSubmenu,
   },

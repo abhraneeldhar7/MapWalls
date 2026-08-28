@@ -41,10 +41,11 @@ function Control({ control }: { control: ControlConfig }) {
   const current = control.targets[0] ? getPath(styles, control.targets[0]) : undefined;
 
   if (control.type === "switch") {
+    const checked = typeof current === "boolean" ? current : control.defaultValue === false ? false : true;
     return (
       <div className="flex items-center justify-between">
         <Label>{control.label}</Label>
-        <Switch checked={current !== false} onCheckedChange={(checked) => applyControl(setStyles, control, checked)} />
+        <Switch checked={checked} onCheckedChange={(checked) => applyControl(setStyles, control, checked)} />
       </div>
     );
   }
@@ -203,7 +204,7 @@ export default function CustomizeSidebar() {
     <Sidebar variant="floating" collapsible="offcanvas">
       <SidebarContent>
         <div className="relative h-full w-full">
-          <TransitionBox activationIndex={0} currentIndex={index} className="space-y-3">
+          <TransitionBox activationIndex={0} currentIndex={index} className="space-y-2">
             <SidebarGroup>
               <SidebarGroupLabel>Quick access</SidebarGroupLabel>
               <div className="relative" onClick={() => setCommandOpen(true)}><Input placeholder="Go to..." /><KbdGroup className="absolute right-2 top-[50%] translate-y-[-50%]"><Kbd>⌘</Kbd><span className="opacity-60">+</span><Kbd>K</Kbd></KbdGroup></div>
@@ -331,7 +332,7 @@ export default function CustomizeSidebar() {
                 <SubMenuContent menu={subMenu} />
 
                 {/* <div className="border rounded-md w-full h-40 bg-muted">
-                  preview here
+                preview here
                 </div> */}
 
                 {subMenu.submenu.length > 0 && (
@@ -359,7 +360,7 @@ export default function CustomizeSidebar() {
                   ))}
                 </div>
                 {/* <div className="fixed bottom-0 z-2 border rounded-md h-40 bg-muted">
-                  preview here
+                preview here
                 </div> */}
               </div>
             )}

@@ -28,6 +28,8 @@ function entityLayers(target: string | undefined): string[] {
   if (base === "water.stream") return ["waterway-stream"];
   if (base === "borders.country") return ["boundary-country"];
   if (base === "borders.state") return ["boundary-state"];
+  if (base === "borders.county") return ["boundary-county"];
+  if (base === "borders.city") return ["boundary-city"];
   if (base.startsWith("labels.")) return [`label-${base.slice(7)}`];
   return [];
 }

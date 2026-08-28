@@ -21,7 +21,7 @@ export function TransitionBox({
         active
           ? "translate-x-0"
           : activationIndex > currentIndex
-            ? "translate-x-full opacity-0"
+            ? "translate-x-full opacity-0 h-0 overflow-hidden"
             : "-translate-x-full opacity-100",
         className
       )}

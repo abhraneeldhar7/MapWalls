@@ -34,7 +34,7 @@ const ROAD_CLASSES = [
 
 type FieldBase = {
   show?: boolean;
-  minzoom?: number;
+  minZoom?: number;
   color?: string;
   opacity?: number;
   outline?: string;
@@ -64,8 +64,8 @@ type LayerDef = {
 
 const DENSITY_STEP = 1.2;
 
-function zoomFor(minzoom: number | undefined, density?: number): number {
-  const base = minzoom ?? 5;
+function zoomFor(minZoom: number | undefined, density?: number): number {
+  const base = minZoom ?? 5;
   const d = density ?? 5;
   return Math.max(0, Math.min(16, Math.round(base + (5 - d) * DENSITY_STEP)));
 }
@@ -99,6 +99,20 @@ const LAYERS: LayerDef[] = [
     filter: ["==", ["get", "admin_level"], 4],
   },
   {
+    path: "borders.county",
+    id: "boundary-county",
+    sourceLayer: "boundary",
+    type: "line",
+    filter: ["in", ["get", "admin_level"], ["literal", [5, 6]]],
+  },
+  {
+    path: "borders.city",
+    id: "boundary-city",
+    sourceLayer: "boundary",
+    type: "line",
+    filter: ["in", ["get", "admin_level"], ["literal", [7, 8]]],
+  },
+  {
     path: "water.river",
     id: "waterway-river",
     sourceLayer: "waterway",
@@ -115,7 +129,7 @@ const LAYERS: LayerDef[] = [
   {
     path: "labels.river",
     id: "label-river",
-    sourceLayer: "water_name",
+    sourceLayer: "waterway",
     type: "symbol",
     filter: ["==", ["get", "class"], "river"],
     baseLayout: { "symbol-placement": "line", "text-size": 10 },
@@ -255,7 +269,7 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
         type: "fill",
         source: "openmaptiles",
         "source-layer": sourceLayer,
-        minzoom: zoomFor(field.minzoom),
+        minzoom: zoomFor(field.minZoom),
         filter: ["==", ["get", "class"], cls],
         paint: {
           ...(field.color ? { "fill-color": field.color } : {}),
@@ -272,7 +286,7 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
         type: "fill",
         source: "openmaptiles",
         "source-layer": "park",
-        minzoom: zoomFor(park.minzoom),
+        minzoom: zoomFor(park.minZoom),
         paint: {
           ...(park.color ? { "fill-color": park.color } : {}),
           ...(park.opacity !== undefined ? { "fill-opacity": opacity01(park.opacity) } : {}),
@@ -291,7 +305,7 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
       type: def.type,
       source: "openmaptiles",
       "source-layer": def.sourceLayer,
-      minzoom: zoomFor(field.minzoom, waterDensity),
+      minzoom: zoomFor(field.minZoom, waterDensity),
     };
     if (def.filter) layer.filter = def.filter;
     layer.paint = paintProps(def.type, field);
@@ -332,7 +346,7 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
         type: "line",
         source: "openmaptiles",
         "source-layer": "transportation",
-        minzoom: zoomFor(field.minzoom, c.roads.density),
+        minzoom: zoomFor(field.minZoom, c.roads.density),
         filter,
         layout: {
           "line-cap": c.roads.lineCap ?? "round",
@@ -356,7 +370,7 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
     const field = getPath(c, def.path) as FieldBase | undefined;
     if (!field || field.show === false) continue;
     const waterDensity = def.path.startsWith("water.") ? c.water?.density : undefined;
-    const minzoom = def.path.startsWith("borders.") ? 0 : zoomFor(field.minzoom, waterDensity);
+    const minzoom = def.path.startsWith("borders.") ? 0 : zoomFor(field.minZoom, waterDensity);
     const layer: Record<string, unknown> = {
       id: def.id,
       type: def.type,
@@ -364,7 +378,14 @@ export function buildStyle(template: MapTemplate): StyleSpecification {
       "source-layer": def.sourceLayer,
       minzoom,
     };
-    const filter = def.type === "symbol" ? labelFilter(field, def.filter) : def.filter;
+    let filter = def.type === "symbol" ? labelFilter(field, def.filter) : def.filter;
+    if (def.path.startsWith("borders.")) {
+      const b = c.borders;
+      const extra: unknown[] = [];
+      if (b?.showMaritime === false) extra.push(["!=", ["get", "maritime"], 1]);
+      if (b?.showDisputed === false) extra.push(["!=", ["get", "disputed"], 1]);
+      if (extra.length > 0) filter = ["all", ...(filter ? [filter] : []), ...extra];
+    }
     if (filter) layer.filter = filter;
     if (def.type === "symbol") layer.layout = labelLayout(field, def.baseLayout ?? {});
     layer.paint = paintProps(def.type, field);

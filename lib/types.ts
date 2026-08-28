@@ -3,7 +3,7 @@ export type FillField = {
   color?: string;
   opacity?: number;
   outline?: string;
-  minzoom?: number;
+  minZoom?: number;
 };
 
 export type LineField = {
@@ -13,14 +13,14 @@ export type LineField = {
   opacity?: number;
   blur?: number;
   dash?: number[];
-  minzoom?: number;
+  minZoom?: number;
 };
 
 export type BuildingField = {
   show?: boolean;
   color?: string;
   opacity?: number;
-  minzoom?: number;
+  minZoom?: number;
 };
 
 export type LabelField = {
@@ -37,7 +37,7 @@ export type LabelField = {
   allowOverlap?: boolean;
   classes?: string[];
   rank?: number;
-  minzoom?: number;
+  minZoom?: number;
 };
 
 export type MapStyleConfig = {
@@ -92,6 +92,10 @@ export type MapStyleConfig = {
   borders: {
     country?: LineField;
     state?: LineField;
+    county?: LineField;
+    city?: LineField;
+    showMaritime?: boolean;
+    showDisputed?: boolean;
   };
   labels: {
     place?: LabelField;

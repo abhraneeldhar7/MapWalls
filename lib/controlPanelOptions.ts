@@ -2,7 +2,12 @@ import * as H from "@hugeicons/core-free-icons";
 
 type IconSvgObject = ReadonlyArray<readonly [string, { readonly [key: string]: string | number }]>;
 
-export type ControlType = "switch" | "color" | "slider" | "buttongroup" | "select";
+export type ControlType = "switch" | "color" | "slider" | "buttongroup" | "select" | "aspect";
+
+export type ControlAccess = {
+  get: (target: string) => unknown;
+  apply: (control: ControlConfig, value: unknown) => void;
+};
 
 export type ControlConfig = {
   label: string;

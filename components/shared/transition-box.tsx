@@ -1,5 +1,4 @@
 "use client";
-
 import { cn } from "@/lib/utils";
 
 export function TransitionBox({
@@ -21,8 +20,8 @@ export function TransitionBox({
         active
           ? "translate-x-0"
           : activationIndex > currentIndex
-            ? "translate-x-full opacity-0 h-0 overflow-hidden"
-            : "-translate-x-full opacity-100",
+            ? "translate-x-full opacity-0 max-h-0"
+            : "-translate-x-full opacity-100 max-h-screen",
         className
       )}
     >

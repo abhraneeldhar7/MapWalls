@@ -1,8 +1,10 @@
 "use client";
 
 import CustomizeSidebar from "@/components/customizeMenu/sidebar";
+import { EditorScreen } from "@/components/editor/editor-screen";
 import { MapView } from "@/components/map/map-view";
 import SearchBar from "@/components/map/searchBar";
+import { useEditor } from "@/components/providers/editor-provider";
 import { useMapProvider } from "@/components/providers/map-provider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,6 +15,7 @@ const showDebug = false
 
 export default function Home() {
   const { styles, viewState } = useMapProvider();
+  const { editorState, setEditorState, setFocusedElement } = useEditor();
   const isMobile = useIsMobile();
   return (
     <main className="relative h-dvh w-full overflow-hidden">
@@ -25,12 +28,15 @@ export default function Home() {
 
       <div className="fixed z-5 top-0 w-full p-4 flex items-center justify-between">
         <div />
-        <SearchBar />
-        <Button>Create</Button>
+        <div className={`transition-all ease-out ${editorState === "editor" ? "translate-y-[-100%] opacity-0 pointer-events-none" : "translate-y-0 opacity-100"}`}>
+          <SearchBar />
+        </div>
+
+        {editorState === "editor" ? <Button>Export</Button> :
+          <Button onClick={() => { setFocusedElement(null); setEditorState("editor"); }}>Create</Button>}
       </div>
 
-
-      <MapView />
+      {editorState === "editor" ? <EditorScreen /> : <MapView />}
 
 
       {showDebug && !isMobile && process.env.NEXT_PUBLIC_ENVIRONMENT === "dev" &&

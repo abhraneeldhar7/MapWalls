@@ -27,17 +27,55 @@ line-translate-anchor
 templates: styling values.
 map: template + texts + location + edge feather.
 
-
 make seaprate provider for editor, inside the mapprovider level. (between mapprovider and sidebar provider).
-sidebar scrollfix.
 mobile drawer.
-boundaries not working properly, for country and not all boundaries are covered. and state boundaries not working.
-what are all the controlls available for boundaries and buildings.
-make minzoom to minZoom keep the camelcase.
-bridges and shit missing
+
+make a separate provider for editor screen, wrap children in app\(customizeMenu)\layout.tsx below the sidebarprovider level. this will have a state editorState:"view"|"editor", which will flick to "editor" when clicked "create" button in the app\(customizeMenu)\page.tsx . when we are in editor screen then:
+make a separate transitionbox in sidebar for new options for editor, and same as the controlls UI, make proper controlls defined there so we can easily map those to mobile UI without rewriting same controlls logic.
+editor view sidebar transitionbox:
+canvas
+    |_aspect raito
+    |_color
+    |_margins
+
+map
+    |_location
+    |_customize
+        |_ [same options and same flow as land, water, etc things in existing sidebar thing, just change the index of active screen] BUT IMPORTANT: the return button action will lead to here at "map" level instead of the existing sidebar menu.
+    |_aspect raito
+        |_1:1
+        |_[other similar stuff]
+
+text
+    |_add text
+    |_format
+
+---
+here the options to be shown in the new editor screened transitionbox are canvas, map, text <Sidebargroup> follow exact patterns used in the existing sidebar.
+then under canvas, there will no more submenu, just rendered out controlls like use a label for "Aspect ratio" then render the buttons (size icon, outline varaint) for the options. color then the hex colorpicker. margins, then the density picker number plus minus thing. follow AGENTS.md. dont put extra styles on existing components.
+
+then under map option:
+label "location" then show the current coordinates in a span then the copy button (same practice as hexcolor picker copy button).
+label "customize" put those same buttons land, water etc,
+label "Aspect ratio" put same controlls as in canvas, reuse component and maybe the writing funcitonality will be different.
+obvious these label things will be reusable compoents, like SubMenuContent.
+---
+now to make the actual editor.
+interactjs will be used, so use this to fullest extend and do least of manual things.
+I want there to be a main background, a dark one like in photoshop.
+this will house our "canvas", which is supposed to be the actual page where the map will be.
+in canvas, put the map, with exact same viewstate and styles and shit. house that properly in there.
+overflowing from the canvas is allowed, canvas just tells user what poriton of the things will be included in export.
+and make sure the main canvas not the paper thing is not zoom-outable, user can zoom in very much but not zoom out after an extend. put some gap between this whole thing and our "canvas".
+and dont code in resolution pixels because its invalid, its using vector things and all in html canvas so output can be whatever resolution user wants.
+
+will be but dont worry implement now:
+1. export
+2. text
+3. margins
+4. magnetic snap for edges.
 
 
 
 
 photoshop for readme makers.
-

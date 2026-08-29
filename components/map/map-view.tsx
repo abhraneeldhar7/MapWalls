@@ -1,26 +1,39 @@
 "use client";
 
 import { useMemo } from "react";
-import { Map as ReactMapGL, ViewState } from "react-map-gl/maplibre";
+import { Map as ReactMapGL, type ViewState } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { buildStyle } from "@/lib/styles";
 import { useMapProvider } from "@/components/providers/map-provider";
-import { MapStyleConfig } from "@/lib/types";
+import type { MapStyleConfig } from "@/lib/types";
 
-export function MapView({ id, styles: stylesProp, viewState: viewStateProp }: { id?: string, styles?: Partial<MapStyleConfig>, viewState?: ViewState }) {
+type ControlledViewState = ViewState & { width: number; height: number };
+
+export function MapView({ id, styles: stylesProp, viewState: viewStateProp, interactive = true, attributionControl = true }: {
+  id?: string,
+  styles?: Partial<MapStyleConfig>,
+  viewState?: ControlledViewState,
+  interactive?: boolean,
+  attributionControl?: boolean,
+}) {
   const { styles: providerStyles, viewState: providerViewState, setViewState } = useMapProvider();
 
   const styles = stylesProp ?? providerStyles;
-  const viewState = viewStateProp ?? providerViewState;
 
   const style = useMemo(() => buildStyle({ name: "Map", config: styles }), [styles]);
 
   return (
     <ReactMapGL
       id={id}
+      interactive={interactive}
+      attributionControl={attributionControl ? undefined : false}
       mapStyle={style}
-      initialViewState={viewState}
-      onMove={(e) => setViewState(e.viewState)}
+      {...(viewStateProp ? { viewState: viewStateProp } : { initialViewState: providerViewState })}
+      onMove={(e) => {
+        if (!interactive) return;
+        const { width: _width, height: _height, ...viewState } = e.viewState as ViewState & { width: number; height: number };
+        setViewState(viewState);
+      }}
       style={{ width: "100%", height: "100%" }}
     />
   );

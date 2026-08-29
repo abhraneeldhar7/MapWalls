@@ -6,13 +6,13 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-sm border border-transparent bg-clip-padding font-[400] whitespace-nowrap transition-all outline-none select-none  disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:transition-all [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[17px] duration-fast leading-[1em] cursor-pointer disabled:opacity-70 opacity-100",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-sm border border-transparent bg-clip-padding font-[400] whitespace-nowrap transition-all outline-none select-none  disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:transition-all [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[17px] duration-fast leading-[1em] cursor-pointer disabled:opacity-70 opacity-100 backdrop-blur-[5px]",
   {
     variants: {
       variant: {
         default: "bg-foreground text-background hover:bg-foreground/80 active:bg-foreground/90",
         outline:
-          "border-border border bg-background/20 hover:bg-foreground/5 active:bg-background/20 backdrop-blur-[3px] hover:backdrop-blur-[7px] active-hover:backdrop-blur-[5px] hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
+          "border-border border bg-background/20 hover:bg-foreground/5 active:bg-background/20 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-foreground/12 active:bg-foreground/18 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground border-foreground/12",
         ghost:

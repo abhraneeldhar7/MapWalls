@@ -1,33 +1,94 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ViewState } from "react-map-gl/maplibre";
 import { Button } from "@/components/ui/button";
 import { MapView } from "@/components/map/map-view";
 import { useEditor, type EditorElement } from "@/components/providers/editor-provider";
 import { useMapProvider } from "@/components/providers/map-provider";
 import { useElementInteractions } from "@/components/editor/use-element-interactions";
+import { useWorkspaceInteractions } from "@/components/editor/use-workspace-interactions";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
-const MIN_SCALE = 0.1;
-const MAX_SCALE = 5;
+function MapFit({ width, height, className, children }: {
+  width: number;
+  height: number;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
 
-function MapLocateDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => setScale(Math.min(el.clientWidth / width, el.clientHeight / height, 1));
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [width, height]);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="h-[min(80vh,80vw)] w-[min(90vw,70vh)] grid-rows-[auto_1fr] gap-0 p-0">
-        <DialogTitle className="sr-only">Change location</DialogTitle>
-        <div className="flex items-center justify-center p-2">
-          <Button variant="default" size="sm" onClick={() => onOpenChange(false)}>Save</Button>
-        </div>
-        {open && (
-          <div className="h-full w-full min-h-0">
-            <MapView id="editor-locate-map" interactive attributionControl={false} />
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+    <div ref={ref} className={cn("flex h-full w-full min-h-0 items-center justify-center overflow-hidden", className)}>
+      <div style={{ width, height, transform: `scale(${scale})`, transformOrigin: "center center" }}>
+        {children}
+      </div>
+    </div>
   );
+}
+
+function LocateOverlay({ onClose, width, height, viewState }: {
+  onClose: () => void;
+  width: number;
+  height: number;
+  viewState: ViewState;
+}) {
+  const { setViewState } = useMapProvider();
+  const [localView, setLocalView] = useState(viewState);
+
+  const save = () => {
+    setViewState(localView);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-5 sm:p-[30px]">
+      <Button
+        variant="default"
+        size="sm"
+        className="absolute top-4 right-4 z-10"
+        onClick={save}
+      >
+        Save
+      </Button>
+      <MapFit width={width} height={height} className="max-w-[600px]">
+        <MapView
+          id="editor-locate-map"
+          interactive
+          attributionControl={false}
+          initialViewState={viewState}
+          onViewChange={setLocalView}
+        />
+      </MapFit>
+    </div>
+  );
+}
+
+function overflowRects(el: { x: number; y: number; width: number; height: number }, cw: number, ch: number) {
+  const left = Math.max(0, -el.x);
+  const top = Math.max(0, -el.y);
+  const right = Math.min(el.width, cw - el.x);
+  const bottom = Math.min(el.height, ch - el.y);
+  const iw = right - left;
+  const ih = bottom - top;
+  if (iw <= 0 || ih <= 0) return [{ x: 0, y: 0, w: el.width, h: el.height }];
+  const rects: { x: number; y: number; w: number; h: number }[] = [];
+  if (top > 0) rects.push({ x: 0, y: 0, w: el.width, h: top });
+  if (bottom < el.height) rects.push({ x: 0, y: bottom, w: el.width, h: el.height - bottom });
+  if (left > 0) rects.push({ x: 0, y: top, w: left, h: ih });
+  if (right < el.width) rects.push({ x: right, y: top, w: el.width - right, h: ih });
+  return rects;
 }
 
 function ResizeHandles() {
@@ -48,17 +109,20 @@ function ResizeHandles() {
   );
 }
 
-function CanvasElement({ el, ref, children }: {
+function CanvasElement({ el, ref, posterW, posterH, children }: {
   el: EditorElement;
   ref: React.Ref<HTMLDivElement>;
+  posterW: number;
+  posterH: number;
   children: React.ReactNode;
 }) {
   const { focusedElement, setFocusedElement } = useEditor();
   const focused = focusedElement === el.id;
+  const overflow = overflowRects(el, posterW, posterH);
 
   return (
     <div
-      ref={ref}
+      ref={focused ? ref : undefined}
       data-el-id={el.id}
       className={cn(
         "absolute touch-none cursor-move transition-all duration-fast",
@@ -70,136 +134,133 @@ function CanvasElement({ el, ref, children }: {
         setFocusedElement(el.id);
       }}
     >
-      {children}
+      <div className="absolute inset-0">{children}</div>
+      {overflow.map((r, i) => (
+        <div
+          key={i}
+          className="absolute pointer-events-none bg-[#1a1a1a]/50"
+          style={{ left: r.x, top: r.y, width: r.w, height: r.h }}
+        />
+      ))}
       {focused && <ResizeHandles />}
     </div>
   );
 }
 
 export function EditorScreen() {
-  const { focusedElement, setFocusedElement, elements, updateElement } = useEditor();
+  const { focusedElement, setFocusedElement, elements, updateElement, canvas, mapElement } = useEditor();
   const { viewState } = useMapProvider();
   const [locateOpen, setLocateOpen] = useState(false);
   const [pan, setPan] = useState({ x: 0, y: 0, scale: 1 });
+  const panRef = useRef(pan);
+  panRef.current = pan;
   const workspaceRef = useRef<HTMLDivElement>(null);
 
-  const canvasEl = elements.find((el) => el.type === "canvas");
-  const posterW = canvasEl?.width ?? 900;
-  const posterH = canvasEl?.height ?? 1600;
-  const mapEl = elements.find((el) => el.type === "map");
+  const posterW = canvas.width;
+  const posterH = canvas.height;
 
-  const register = useElementInteractions({
-    scale: pan.scale,
-    posterW,
-    posterH,
-    updateElement,
-    onDragStart: setFocusedElement,
-  });
+  const register = useElementInteractions({ scale: pan.scale, updateElement, onDragStart: setFocusedElement });
+  const registerWorkspace = useWorkspaceInteractions({ panRef, setPan });
+
+  const workspaceRefCb = useCallback(
+    (node: HTMLDivElement | null) => {
+      workspaceRef.current = node;
+      registerWorkspace(node);
+    },
+    [registerWorkspace]
+  );
 
   useEffect(() => {
     const ws = workspaceRef.current;
     if (!ws) return;
-    const s = Math.min(ws.clientWidth / posterW, ws.clientHeight / posterH, 1);
+    const m = window.innerWidth >= 768 ? 50 : 20;
+    const availW = Math.max(ws.clientWidth - m * 2, 0);
+    const availH = Math.max(ws.clientHeight - m * 2, 0);
+    const s = Math.min(availW / posterW, availH / posterH, 1);
     setPan({ x: (ws.clientWidth / 2) * (1 - s), y: (ws.clientHeight / 2) * (1 - s), scale: s });
   }, [posterW, posterH]);
 
-  useEffect(() => {
-    const ws = workspaceRef.current;
-    if (!ws) return;
-
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const rect = ws.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-
-      setPan((v) => {
-        if (e.ctrlKey || e.metaKey) {
-          const factor = Math.exp(-e.deltaY * 0.0015);
-          const next = Math.min(Math.max(v.scale * factor, MIN_SCALE), MAX_SCALE);
-          const r = next / v.scale;
-          return { x: mx - (mx - v.x) * r, y: my - (my - v.y) * r, scale: next };
-        }
-        return { x: v.x - e.deltaX, y: v.y - e.deltaY, scale: v.scale };
-      });
-    };
-
-    ws.addEventListener("wheel", onWheel, { passive: false });
-    return () => ws.removeEventListener("wheel", onWheel);
-  }, []);
-
-  const locateBtnPos = mapEl && focusedElement === mapEl.id
+  const locateBtnPos = mapElement && focusedElement === mapElement.id
     ? (() => {
-      const ws = workspaceRef.current;
-      if (!ws) return null;
-      const rect = ws.getBoundingClientRect();
-      return {
-        left: rect.left + rect.width / 2 + (mapEl.x + mapEl.width / 2 - posterW / 2) * pan.scale,
-        top: rect.top + rect.height / 2 + (mapEl.y - posterH / 2) * pan.scale,
-      };
-    })()
+        const ws = workspaceRef.current;
+        if (!ws) return null;
+        const rect = ws.getBoundingClientRect();
+        return {
+          left: rect.left + rect.width / 2 + (mapElement.x + mapElement.width / 2 - posterW / 2) * pan.scale,
+          top: rect.top + rect.height / 2 + (mapElement.y - posterH / 2) * pan.scale,
+        };
+      })()
     : null;
 
   return (
-    <div
-      ref={workspaceRef}
-      className="absolute inset-0 overflow-hidden bg-[#1a1a1a]"
-      onClick={() => setFocusedElement(null)}
-    >
+    <>
       <div
-        className="h-full w-full"
-        style={{ transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${pan.scale})`, transformOrigin: "0 0" }}
+        ref={workspaceRefCb}
+        className="absolute inset-0 overflow-hidden bg-[#1a1a1a] touch-none"
+        onClick={() => setFocusedElement(null)}
       >
-        <div className="flex h-full w-full items-center justify-center">
-          <div
-            className="relative shrink-0 shadow-2xl ring-1 ring-white/10"
-            style={{ width: posterW, height: posterH, backgroundColor: canvasEl?.color ?? "#ffffff" }}
-          >
-            {elements
-              .filter((el) => el.type !== "canvas")
-              .sort((a, b) => a.zIndex - b.zIndex)
-              .map((el) => (
-                <CanvasElement key={el.id} el={el} ref={register}>
-                  {el.type === "map" && (
-                    <div className="h-full w-full pointer-events-none">
-                      <MapView
-                        id="editor-canvas-map"
-                        interactive={false}
-                        attributionControl={false}
-                        viewState={{ ...viewState, width: el.width, height: el.height }}
-                      />
-                    </div>
-                  )}
-                  {el.type === "text" && (
-                    <p className="w-full h-full flex items-center justify-center text-2xl font-bold select-none pointer-events-none">
-                      {el.content}
-                    </p>
-                  )}
-                </CanvasElement>
-              ))}
+        <div
+          className="h-full w-full"
+          style={{ transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${pan.scale})`, transformOrigin: "0 0" }}
+        >
+          <div className="flex h-full w-full items-center justify-center">
+            <div
+              className="relative shrink-0 shadow-2xl ring-1 ring-white/10"
+              style={{ width: posterW, height: posterH, backgroundColor: canvas.color }}
+            >
+              {elements
+                .filter((el) => el.type !== "canvas")
+                .sort((a, b) => a.zIndex - b.zIndex)
+                .map((el) => (
+                  <CanvasElement key={el.id} el={el} ref={register} posterW={posterW} posterH={posterH}>
+                    {el.type === "map" && (
+                      <div className="h-full w-full pointer-events-none">
+                        <MapView
+                          id="editor-canvas-map"
+                          interactive={false}
+                          attributionControl={false}
+                          viewState={{ ...viewState, width: el.width, height: el.height }}
+                        />
+                      </div>
+                    )}
+                    {el.type === "text" && (
+                      <p className="w-full h-full flex items-center justify-center text-2xl font-bold select-none pointer-events-none">
+                        {el.content}
+                      </p>
+                    )}
+                  </CanvasElement>
+                ))}
+            </div>
           </div>
         </div>
+
+        {locateBtnPos && (
+          <div
+            className="absolute z-10"
+            style={{ left: locateBtnPos.left, top: locateBtnPos.top, transform: "translate(-50%, calc(-100% - 8px))" }}
+          >
+            <Button
+              variant="default"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLocateOpen(true);
+              }}
+            >
+              Change location
+            </Button>
+          </div>
+        )}
       </div>
 
-      {locateBtnPos && (
-        <div
-          className="absolute z-10"
-          style={{ left: locateBtnPos.left, top: locateBtnPos.top, transform: "translate(-50%, calc(-100% - 8px))" }}
-        >
-          <Button
-            variant="default"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLocateOpen(true);
-            }}
-          >
-            Change location
-          </Button>
-        </div>
+      {locateOpen && mapElement && (
+        <LocateOverlay
+          onClose={() => setLocateOpen(false)}
+          width={mapElement.width}
+          height={mapElement.height}
+          viewState={viewState}
+        />
       )}
-
-      <MapLocateDialog open={locateOpen} onOpenChange={setLocateOpen} />
-    </div>
+    </>
   );
 }

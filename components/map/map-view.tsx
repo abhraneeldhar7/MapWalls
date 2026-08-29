@@ -9,12 +9,14 @@ import type { MapStyleConfig } from "@/lib/types";
 
 type ControlledViewState = ViewState & { width: number; height: number };
 
-export function MapView({ id, styles: stylesProp, viewState: viewStateProp, interactive = true, attributionControl = true }: {
+export function MapView({ id, styles: stylesProp, viewState: viewStateProp, initialViewState: initialViewStateProp, interactive = true, attributionControl = true, onViewChange }: {
   id?: string,
   styles?: Partial<MapStyleConfig>,
   viewState?: ControlledViewState,
+  initialViewState?: ViewState,
   interactive?: boolean,
   attributionControl?: boolean,
+  onViewChange?: (viewState: ViewState) => void,
 }) {
   const { styles: providerStyles, viewState: providerViewState, setViewState } = useMapProvider();
 
@@ -28,11 +30,12 @@ export function MapView({ id, styles: stylesProp, viewState: viewStateProp, inte
       interactive={interactive}
       attributionControl={attributionControl ? undefined : false}
       mapStyle={style}
-      {...(viewStateProp ? { viewState: viewStateProp } : { initialViewState: providerViewState })}
+      {...(viewStateProp ? { viewState: viewStateProp } : { initialViewState: initialViewStateProp ?? providerViewState })}
       onMove={(e) => {
         if (!interactive) return;
         const { width: _width, height: _height, ...viewState } = e.viewState as ViewState & { width: number; height: number };
-        setViewState(viewState);
+        if (onViewChange) onViewChange(viewState);
+        else setViewState(viewState);
       }}
       style={{ width: "100%", height: "100%" }}
     />

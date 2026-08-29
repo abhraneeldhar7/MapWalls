@@ -35,12 +35,16 @@ export function getAspectValue(el: { width: number; height: number }): string {
   return best.value;
 }
 
-export function applyAspectRatio(el: { width: number; height: number }, value: string) {
+export function applyAspectRatio(el: { x: number; y: number; width: number; height: number }, value: string) {
   const opt = ASPECT_OPTIONS.find((o) => o.value === value);
   if (!opt) return el;
-  const w = el.width;
-  const h = el.height;
-  return w <= h
-    ? { width: w, height: Math.round((w * opt.height) / opt.width) }
-    : { width: Math.round((h * opt.width) / opt.height), height: h };
+  const area = el.width * el.height;
+  const newW = Math.round(Math.sqrt(area * (opt.width / opt.height)));
+  const newH = Math.round(Math.sqrt(area / (opt.width / opt.height)));
+  return {
+    x: Math.round(el.x + el.width / 2 - newW / 2),
+    y: Math.round(el.y + el.height / 2 - newH / 2),
+    width: newW,
+    height: newH,
+  };
 }

@@ -56,6 +56,8 @@ type EditorContextValue = {
   editorState: EditorState;
   setEditorState: (s: EditorState) => void;
   elements: EditorElement[];
+  canvas: EditorElement;
+  mapElement: EditorElement | null;
   focusedElement: string | null;
   setFocusedElement: (id: string | null) => void;
   updateElement: (id: string, patch: Partial<EditorElement>) => void;
@@ -77,9 +79,12 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     setElements((prev) => [...prev, el]);
   }, []);
 
+  const canvas = elements.find((el) => el.type === "canvas") ?? defaultElements[0];
+  const mapElement = elements.find((el) => el.type === "map") ?? null;
+
   return (
     <EditorContext.Provider
-      value={{ editorState, setEditorState, elements, focusedElement, setFocusedElement, updateElement, addElement }}
+      value={{ editorState, setEditorState, elements, canvas, mapElement, focusedElement, setFocusedElement, updateElement, addElement }}
     >
       {children}
     </EditorContext.Provider>
